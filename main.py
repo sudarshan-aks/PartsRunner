@@ -95,7 +95,7 @@ print(data)
 #     })
 # newphone = create_newphone.json()
 # print(newphone)
-response1 = requests.post(
+voice_campaign = requests.post(
     'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/campaigns',
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
     json={"leads":
@@ -105,26 +105,57 @@ response1 = requests.post(
         "organization_id": "1769903836421x454252683899297604",
         "tenant_id": "hackathon",
         "user_id": "1769905924470x566126461042309713"})
-time.sleep(60)
-data = response1.json()
-print(data["campaign_id"])
+# agent = requests.get(
+#     f'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/agents/{data['voice_agent_id']}',
+#     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'}
+# )
+# agent_res = agent.json()
+# print(agent_res)
+
+# while True:
+#     voice_campaign_res = voice_campaign.json() 
+#     # print(voice_campaign.status_code)
+#     try:
+#         print(voice_campaign_res["campaign_end_time"])
+#         break
+#     except:
+#         continue
+
+voice_campaign_res = voice_campaign.json()
+# pause_campaign = requests.post(
+#     f'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/campaigns/{voice_campaign_res["campaign_id"]}/calls',
+#     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'}
+# )
+print("before loop")
+while True:
+    print("during loop")
+    call_id = requests.get(
+    f'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/campaigns/{voice_campaign_res["campaign_id"]}/calls',
+    headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
+    )
+    call_id_res = call_id.json()
+    if call_id_res["count"]>=3:
+
+        voice_campaign_res = voice_campaign.json()
+        break
+print(voice_campaign_res["campaign_id"])
 
 call_id = requests.get(
-    f'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/campaigns/{data["campaign_id"]}/calls',
+    f'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/campaigns/{voice_campaign_res["campaign_id"]}/calls',
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
 )
 call_id_res = call_id.json()
 print(call_id_res)
 
-call_id = requests.get(
+agent_list = requests.get(
     'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/agents',
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
     params = {'organization_id': "1769903836421x454252683899297604"},
 )
-call_id_res = call_id.json()
-print(call_id_res["agents"])
+agent_list_res = agent_list.json()
+print(agent_list_res["agents"])
 count = 0
-for agent in call_id_res["agents"]:
+for agent in agent_list_res["agents"]:
     count += 1
     print(count)
 
