@@ -12,7 +12,7 @@ voice_agent_response = requests.post(
     json={
         "agent_type": "voice",
         "agent_name": "Price Negotiator",
-        "starting_message": f"Hi, I'm calling from PartsRunner. I'm looking for the best price on {quantity} of {item_wanted}.",
+        "starting_message": f"Hi, I'm calling from PartsRunner.",
         "prompt": f"""You are a professional procurement agent for PartsRunner.
 GOAL: Secure the LOWEST possible price and confirm availability for {quantity} of {item_wanted}.
 
@@ -22,12 +22,14 @@ CRITICAL RULES:
 3. Do not authorize payments or give credit card info.
 
 CONVERSATION SCRIPT(use judgement to ensure you get all details needed, and confirm once after each question to ensure you have the correct details):
-Step 1 (Availability): Ask if they have {quantity} of {item_wanted} in stock right now, and if not then when they will have it available?
+Step 1 (Availability): Ask: Do you have {quantity} {item_wanted}s in stock right now, and if not then when will you have it in stock?
 Step 2 (Price): Ask: "What is the absolute lowest price per unit you can offer?"
 Step 3 (Tax): Ask: "Does that price include tax? If no, then ask the total cost with tax?"
 Step 4 (Delivery): Ask: "Can I get this product delivered to {location}?"
-Step 5 (only do this step if they said they can deliver): What is the cost for delivery?"
-Step 6 (Closing): Tell them you will call back to confirm and put a hold on the product, and say goodbye.
+Step 5 (Date Available) (only if they said they can't deliver it): When and where can I pick it up?
+Step 6 (only do this step if they said they can deliver): What is the cost for delivery?"
+Step 7 (only do this as well if they said they can deliver): When can I expect it to be delivered?
+Step 8 (Closing): Tell them you will call back to confirm and put a hold on the product, and say goodbye.
 
 If they do not have the item: Ask for a comparable substitute or when they expect stock.""",
         "organization_id": "1769903836421x454252683899297604",
@@ -36,11 +38,13 @@ If they do not have the item: Ask for a comparable substitute or when they expec
         "language": "en-US",
         "extraction_fields": [
             "unit_price",
-            "total_cost",
             "delivery_available",
+            "delivery_date",
             "delivery_cost",
             "in_stock",
-            "date_available"
+            "date_available",
+            "pickup_date",
+            "pickup_location"
         ],
         "general_tools": [
             {
@@ -99,7 +103,7 @@ voice_campaign = requests.post(
     'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/campaigns',
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
     json={"leads":
-        [{"phone_number": "+13318145500"}],
+        [{"phone_number": "+15174555728"}],
         "voice_agent_id": data['voice_agent_id'],
         "agent_outbound_number": "+15172529016",
         "organization_id": "1769903836421x454252683899297604",
@@ -134,7 +138,7 @@ while True:
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
     )
     call_id_res = call_id.json()
-    if call_id_res["count"]>=3:
+    if call_id_res["count"]>0:
 
         voice_campaign_res = voice_campaign.json()
         break
@@ -145,20 +149,24 @@ call_id = requests.get(
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
 )
 call_id_res = call_id.json()
-print(call_id_res)
+# print(call_id_res)
 
+call_extraction = requests.get(f'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/voice/calls/{call_id_res['calls'][0]["call_id"]}/extractions',
+    headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},)
+call_extraction_res = call_extraction.json()
+print(call_extraction_res)
 agent_list = requests.get(
     'https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/agents',
     headers={'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'},
     params = {'organization_id': "1769903836421x454252683899297604"},
 )
 agent_list_res = agent_list.json()
-print(agent_list_res["agents"])
+# print(agent_list_res["agents"])
 count = 0
 for agent in agent_list_res["agents"]:
     count += 1
     print(count)
-
+    # print(agent)
     id = (agent["agent_id"])
     delete_agents = requests.delete(f"https://teli-hackathon--transfer-message-service-fastapi-app.modal.run/v1/agents/{id}", headers = {'X-API-Key': 'hackathon-sms-api-key-h4ck-2024-a1b2-c3d4e5f67890'} )
     print("")
